@@ -1,0 +1,38 @@
+Open-Source Fixedpoint Model-Checker version 2024
+INPUT:
+   C:\Users\matti\OneDrive\Documenti\Mattia\Uni\Master\Logic for Security\Assignements\AnB_w2.AnB
+SUMMARY:
+  ATTACK_FOUND
+GOAL:
+  secrets
+BACKEND:
+  Open-Source Fixedpoint Model-Checker version 2024
+STATISTICS:
+  TIME 78 ms
+  parseTime 0 ms
+  visitedNodes: 1 nodes
+  depth: 1 plies
+
+ATTACK TRACE:
+(x20,1) -> i: {x20,x26,grant}_(pk(x25))
+i can produce secret grant
+
+secret leaked: grant
+
+
+% Reached State:
+%
+% secrets(grant,secrecyset(x20,1,pgrant),i)
+% state_rA(x20,1,grant,inv(pk(x20)),pk(x20),pk(x25),pk(x26),x26,x25,inv(pseudonym(x20)),inv(confChCr(x20)),inv(authChCr(x20)),pseudonym(x20),{x20,x26,grant}_(pk(x25)),1)
+% contains(secrecyset(x20,1,pgrant),x20)
+% contains(secrecyset(x20,1,pgrant),x25)
+% contains(secrecyset(x20,1,pgrant),x26)
+% state_rB(x30,0,photos,pk(x32),pk(x33),inv(pk(x30)),pk(x30),x33,x32,inv(pseudonym(x30)),inv(confChCr(x30)),inv(authChCr(x30)),pseudonym(x30),1)
+% state_rP(x34,0,pk(x35),pk(x36),inv(pk(x34)),pk(x34),x36,x35,inv(pseudonym(x34)),inv(confChCr(x34)),inv(authChCr(x34)),pseudonym(x34),1)
+
+
+EXPLENATION
+
+However, the attack is found because A has no way to sign/authenticate her messages — she has no private key, so grant is just encrypted but not authenticated. The intruder can impersonate roles.For Week 2, the cleanest fix is to remove grant from A's initial knowledge and instead treat it as a fresh nonce generated per session, and also tighten the secrecy goal to not include P as a trusted party (since P is the printer and could be the intruder)
+
+"The static analysis shows no passive leakage (intruder cannot decrypt messages). However, OFMC finds an active attack: since A has no private key, her messages cannot be authenticated. The identity provider will be introduced in Week 3 to fix this."

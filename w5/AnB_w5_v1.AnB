@@ -1,0 +1,34 @@
+Protocol: PhotoPrint_W4
+
+Types:
+    Agent A, P, B, idp;
+    Number grant, na, np, nb, pwd, photos, selection, need_auth;
+    Function f1, f2, f3, f4
+
+Knowledge:
+    A:   A, P, B, idp, pk(idp), pwd, pk(B), pk(P), na, photos, f1, f2, selection; # pk(B) amd pk(P) are known after A runs the keyLookUp protocol
+    idp: A, P, B, idp, pk(idp), inv(pk(idp)), pk(P), pk(B), pwd, grant, na, f1, f2, f4;
+    P:   A, P, B, idp, pk(idp), pk(P), inv(pk(P)), pk(B), np, f2, f3, f4, need_credentials;
+    B:   A, P, B, idp, pk(idp), pk(B), inv(pk(B)), pk(P), photos, nb, f2, f3, f4, need_auth
+
+Actions:
+
+    # First A runs the keyLookUp protocol to get pk(B) and pk(P) from idp
+
+    A   -> idp: {f1(A, P, B, pwd, na)}(pk(idp))
+    idp -> A:   {f1(A, P, B, grant, na)}(inv(pk(idp)))
+    A   -> P:   {f1(A, P, B, selection, na)}(pk(P))
+    P   ->* B:   {f1(A, P, B, selection, na), f3(np)}(pk(B))
+    B   *-> P:   {f4(A, P, B, need_auth), f3(nb)}(pk(P))
+    P   -> idp: {f4(A, P, B, need_credentials), f3(np)}(pk(idp))
+    idp -> P:   {{f4(A, P, B, grant), f3(np)}(inv(pk(idp)))}(pk(P))
+    P   ->* B:   {{f4(A, P, B, grant), f3(np)}(inv(pk(idp))), f3(np)}(pk(B))
+    B   *-> P:   {photos, f3(np)}(pk(P))
+
+Goals:
+    photos secret between A, B, P;
+    #grant secret between A, idp, P, B; #this is hard to achive: idp doesn't have a secure key to use to encrypt the response to A
+    #pwd secret between A, idp;
+
+    #A authenticates idp on f2(A, P, B, grant, na);
+    #B authenticates P on np

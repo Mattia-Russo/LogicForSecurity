@@ -1,0 +1,33 @@
+# PLANT UML sequence diagram for the above execution:
+
+@startuml
+
+title Open Authorization Protocol (Week 3)
+
+participant A as "A (User)"
+participant IDP as "IDP (Identity Provider)"
+participant P as "P (Photo Book Service)"
+participant B as "B (Photo Storage)"
+
+== Phase 1: Authentication & Token Request ==
+
+A -> IDP: {A, P, B, pwdA}pk(IDP)
+note right: A requests authorization token.\nPassword proves identity but is\nnot used as encryption key.
+
+IDP -> A: {A, P, B, tokenAP}inv(pk(IDP))
+note right: IDP verifies pwdA, then issues\na signed authorization token.\nOnly IDP can produce this signature.
+
+== Phase 2: Token Forwarding ==
+
+A -> P: {A, P, B, tokenAP}inv(pk(IDP))
+note right: A forwards the IDP-signed token\nto P. No re-signing — just forwarding.
+
+== Phase 3: Resource Access ==
+
+P -> B: {A, P, B, tokenAP}inv(pk(IDP))
+note right: P presents the token to B.\nB verifies signature using pk(IDP).
+
+B -> P: {photos}pk(P)
+note right: B grants access and returns\nphotos encrypted for P only.
+
+@enduml

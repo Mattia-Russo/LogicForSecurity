@@ -1,0 +1,20 @@
+# In this protocol we just considerend necessary information
+
+Protocol: KeyLookUp_W4
+
+Types:
+    Agent A, P, B, idp;
+    Number na;
+    Format f1, f2, f3
+
+Knowledge:
+    A:   A, P, B, idp, pk(idp), pwd(A), na, f1, f2, f3;
+    idp: A, P, B, idp, pk(idp), inv(pk(idp)), pk(P), pk(B), f1, f2, f3, na;
+
+Actions:
+    A   -> idp: {f1(A, P, B, na)}(pk(idp))
+    idp -> A:   {f2(A, f3(P, pk(P)), f3(B, pk(B)), na)}(inv(pk(idp)))
+
+Goals:
+
+    A authenticates idp on f2(A, f2(P, pk(P)), f3(B, pk(B)), na)

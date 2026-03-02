@@ -1,0 +1,50 @@
+Protocol: PhotoPrint_W2
+
+Types:
+    Agent A, B, P;
+    Number grant, photos;
+
+Knowledge:
+    A: A, B, P, pk(B), pk(P);
+    B: A, B, P, pk(B), inv(pk(B)), pk(P);
+    P: A, B, P, pk(P), inv(pk(P)), pk(B)
+
+Actions:
+    A -> P: {A, B, grant}pk(P)
+    P -> B: {A, P, grant}pk(B)
+    B -> P: {photos}pk(P)
+
+Goals:
+    grant secret between A, P;
+    photos secret between B, P;
+
+
+
+# Special Task - Week 2: Static Analysis (Dolev-Yao)
+
+# Intruder's initial knowledge:
+#   A, P, B, pk(A), pk(B), pk(P), inv(pk(i))
+
+# Messages observed on the network:
+#   msg1 = {A, B, grant}pk(P)       (sent by A to P)
+#   msg2 = {A, P, grant}pk(B)       (sent by P to B)
+#   msg3 = {photos}pk(P)            (sent by B to P)
+
+# What can the intruder learn?
+
+#   - msg1 is encrypted with pk(P). The intruder does not have
+#     inv(pk(P)), so it cannot decrypt msg1.
+#     => grant and the authorization details remain hidden.
+
+#   - msg2 is encrypted with pk(B). The intruder does not have
+#     inv(pk(B)), so it cannot decrypt msg2.
+#     => grant remains hidden.
+
+#   - msg3 is encrypted with pk(P). The intruder does not have
+#     inv(pk(P)), so it cannot decrypt msg3.
+#     => photos remain hidden.
+
+# Conclusion:
+#   The intruder learns nothing beyond its initial knowledge.
+#   Specifically, it cannot learn 'grant' or 'photos'.
+#   The secrecy goals hold under passive attack.

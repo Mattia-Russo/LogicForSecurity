@@ -1,0 +1,75 @@
+Protocol: PhotoPrint_W3
+
+Types:
+    Agent A, P, B;
+    Symmetric_key pwdA;
+    Number photos, grant;
+
+Knowledge:
+    A:   A, P, B, idp, pk(idp), pwdA;
+    idp: A, P, B, idp, pk(idp), inv(pk(idp)), pk(P), pk(B), pwdA, grant;
+    P:   A, P, B, idp, pk(idp), pk(P), inv(pk(P)), pk(B);
+    B:   A, P, B, idp, pk(idp), pk(B), inv(pk(B)), pk(P), photos
+
+Actions:
+    A   -> idp: {A, P, B, pwdA}pk(idp)
+    idp -> A:   {A, P, B, grant}inv(pk(idp))
+    A   -> P:   {A, P, B, grant}inv(pk(idp))
+    P   -> B:   {A, P, B, grant}inv(pk(idp))
+    B   -> P:   {photos}pk(P)
+
+Goals:
+    photos secret between B, P;
+    grant secret between A, idp, P, B;
+
+
+
+
+# Special Task - Week 3: Lazy Intruder Executability of Role P
+
+# We instantiate P = i (intruder) and keep A = a, B = b, IDP = idp
+# as honest agents. We show that the intruder can execute
+# every outgoing message of role P using only messages it has
+# received so far, following the lazy intruder method.
+
+# Intruder's initial knowledge:
+#   M0 = { a, b, i, idp, pk(a), pk(b), pk(i), inv(pk(i)), pk(idp) }
+
+
+#   Role A (A=a, P=i):
+#     a -> i : {a, i, b, pwdA}(pk(idp))          [msg1, sent by a to i]
+#     idp-> a : {a, i, b, token}(inv(pk(idp)))   [msg2, a receives from idp]
+#     a -> i : {a, i, b, token}(inv(pk(idp)))    [msg3, sent by a to i]
+
+#   Role P = i:
+#     i receives msg3 from a
+#     i must send to b:  {a, i, b, token}(inv(pk(idp)))   [outgoing of P, step 1]
+#     i receives from b: {photos}(pk(i))                  [msg4]
+
+# Lazy Intruder Steps:
+
+# Step 1: i receives msg3 = {a, i, b, token}(inv(pk(idp)))
+#   M1 = M0 ∪ { {a, i, b, token}(inv(pk(idp))) }
+#   Incoming message: apply OpenSig rule since we have the signed message.
+#   M1 ⊢ {a, i, b, token}(inv(pk(idp)))   by Axiom
+#   Apply OpenSig: M1 ⊢ inv(pk(idp))?  No, intruder does not have inv(pk(idp)).
+#   => Cannot open signature, but i does NOT need to open it.
+#      i only needs to FORWARD it to b.
+
+# Step 2: P's first outgoing message to b:
+#   i must send:  {a, i, b, token}(inv(pk(idp)))
+#   Check: M1 ⊢ {a, i, b, token}(inv(pk(idp))) ?
+#   => By Axiom: {a, i, b, token}(inv(pk(idp))) ∈ M1.  OK
+#   i simply forwards the token it received from a --> No composition needed.
+
+# Step 3: i receives msg4 = {photos}(pk(i)) from b.
+#   M2 = M1 ∪ { {photos}(pk(i)) }
+#   Apply DecAsym: M2 ⊢ {photos}(pk(i)) and M2 ⊢ inv(pk(i))
+#   => inv(pk(i)) ∈ M0 ⊆ M2  OK
+#   => M2 ⊢ photos  OK
+
+# Conclusion:
+#   The intruder can successfully play role P:
+#   - It forwards the IDP-signed token it received from a directly to b (Step 2).
+#   - It decrypts the photos sent by b using its own private key (Step 3).
+#   Role P is executable. The intruder learns 'photos' at the end.
