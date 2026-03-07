@@ -1,14 +1,27 @@
-WHY USING TWO DIFFERENT NONCE WHEN A REQUESTS TO IDP pk(P) and pk(B):
-Technically, A could reuse na for both key lookups — but using two separate nonces na and nb is better practice for this reason:
-Nonce reuse conflates two separate exchanges. If A sends na in both requests and idp echoes na back in both responses, 
-A cannot cryptographically distinguish "this response is for my P-key request" from "this response is for my B-key request." 
-An attacker who can replay idp's response to the first request could potentially substitute it as the response to the second, 
-making A believe pk(P) is also the public key of B (or vice versa). By using distinct nonces na and nb, each response is bound 
-to exactly one request, so A can be sure which key certificate answers which query.
+Keylookup: verified
+
+Protocol:
+Errors resolved from Week 3:
+
+Na, Grant, Np uppercase fix carried forward — no syntax errors on those.
+photos(A) secret between A, B, P modeling mistake carried forward as fixed.
+
+
+Errors encountered in Week 4 and their status:
+1. ATTACK_FOUND on Grant and pwd(A) secrecy
+Two secrets leak in the same attack trace, both for the same reason as Week 3's Grant attack — the intruder intercepts A's message to idp, forwards it, and receives idp's signed response. Since the signature is open to anyone, Grant leaks via OpenSig. Additionally pwd(A) leaks now because it travels inside {f_auth(..., pwd(A), ...)}pk(idp) — the intruder intercepts this, and although it can't decrypt it directly, the attack trace shows pwd(A) in the leaked secrets set, meaning OFMC found a way to expose it through the same man-in-the-middle interception chain.
+This is the same root attack as Week 3, now also catching pwd(A) because the secrecy goal for it was added. It cannot be fixed at Week 4 for the same reasons:
+
+Grant secrecy requires confidential delivery back to A, impossible without A's public key or using the password as encryption key.
+pwd(A) secrecy requires a confidential channel to idp, which A cannot establish with public-key encryption alone since the intruder can intercept and forward.
+
+Both remain known limitations, consistent with the commented-out goals in earlier versions.
+
+Errors remaining unresolved at end of Week 4:
 
 Open-Source Fixedpoint Model-Checker version 2024
 INPUT:
-   C:\Users\matti\OneDrive\Documenti\Mattia\Uni\Master\Logic for Security\Assignements\w4\AnB_w4_v1.AnB
+   C:\Users\matti\OneDrive\Documenti\Mattia\Uni\Master\Logic for Security\Assignements\w4\AnB_w4_v2.AnB
 SUMMARY:
   ATTACK_FOUND
 GOAL:
@@ -16,45 +29,34 @@ GOAL:
 BACKEND:
   Open-Source Fixedpoint Model-Checker version 2024
 STATISTICS:
-  TIME 78 ms
+  TIME 343 ms
   parseTime 0 ms
-  visitedNodes: 14 nodes
-  depth: 3 plies
+  visitedNodes: 3 nodes
+  depth: 2 plies
 
 ATTACK TRACE:
-(x38,1) -> i: {f1(x38,idp,x39,pwd(x38),na)}_(pk(idp))
-i -> (idp,1): {f1(x38,idp,x39,pwd(x38),na)}_(pk(idp))
-(idp,1) -> i: {f2(x38,idp,x39,grant,na)}_inv(pk(idp))
-i -> (x38,1): {f2(x38,idp,x39,grant,na)}_inv(pk(idp))
-(x38,1) -> i: f2(x38,idp,x39,grant,na)
-i can produce secret photos(x38)
+(x37,1) -> i: {fauth,x37,x39,x38,pwd(x37),Na(1)}_(pk(idp))
+i -> (idp,1): {fauth,x37,x39,x38,pwd(x37),Na(1)}_(pk(idp))
+(idp,1) -> i: {fgrant,x37,x39,x38,Grant(2),Na(1)}_inv(pk(idp))
+i can produce secret Grant(2)
 
-secret leaked: photos(x38)
+secret leaked: Grant(2)
 
 
 % Reached State:
 %
-% secrets(photos(x38),secrecyset(x38,1,pphotosA),i)
-% state_rA(x38,2,f4,f3,f2,f1,photos(x38),na,pk(idp),pk(x39),pwd(x38),pk(idp),idp,x39,idp,inv(pseudonym(x38)),inv(confChCr(x38)),inv(authChCr(x38)),pseudonym(x38),{f1(x38,idp,x39,pwd(x38),na)}_(pk(idp)),f2(x38,idp,x39,grant,na),{f2(x38,idp,x39,grant,na)}_inv(pk(idp)),f2(x38,idp,x39,grant,na),1)
-% contains(secrecyset(x38,1,pphotosA),x38)
-% contains(secrecyset(x38,1,pphotosA),x39)
-% contains(secrecyset(x38,1,pphotosA),idp)
-% secrets(pwd(x38),secrecyset(x38,1,ppwdA),i)
-% contains(secrecyset(x38,1,ppwdA),x38)
-% contains(secrecyset(x38,1,ppwdA),idp)
-% request(x38,idp,pAidpf2APBgrantna,f2(x38,idp,x39,grant,na),1)
-% state_ridp(idp,1,f4,f3,f2,f1,na,grant,pwd(x38),pk(x39),pk(idp),inv(pk(idp)),pk(idp),x39,idp,x38,inv(pseudonym(idp)),inv(confChCr(idp)),inv(authChCr(idp)),pseudonym(idp),{f1(x38,idp,x39,pwd(x38),na)}_(pk(idp)),{f2(x38,idp,x39,grant,na)}_inv(pk(idp)),1)
-% state_rB(x45,0,f3,f2,photos(x38),pk(x47),inv(pk(x45)),pk(x45),pk(idp),idp,x47,x38,inv(pseudonym(x45)),inv(confChCr(x45)),inv(authChCr(x45)),pseudonym(x45),1)
-% state_rP(x41,0,f3,f2,np,pk(x43),inv(pk(x41)),pk(x41),pk(idp),idp,x43,x44,inv(pseudonym(x41)),inv(confChCr(x41)),inv(authChCr(x41)),pseudonym(x41),1)
-% witness(idp,x38,pAidpf2APBgrantna,f2(x38,idp,x39,grant,na))
+% secrets(Grant(2),secrecyset(idp,1,pGrant),i)
+% state_ridp(idp,1,pwd(x37),pk(x38),pk(x39),inv(pk(idp)),pk(idp),x38,x39,x37,fphotos,fpresp,fpreq,freq,fgrant,fauth,inv(pseudonym(idp)),inv(confChCr(idp)),inv(authChCr(idp)),pseudonym(idp),Na(1),{fauth,x37,x39,x38,pwd(x37),Na(1)}_(pk(idp)),Grant(2),{fgrant,x37,x39,x38,Grant(2),Na(1)}_inv(pk(idp)),1)
+% contains(secrecyset(idp,1,pGrant),x37)
+% contains(secrecyset(idp,1,pGrant),idp)
+% contains(secrecyset(idp,1,pGrant),x39)
+% contains(secrecyset(idp,1,pGrant),x38)
+% secrets(pwd(x37),secrecyset(idp,1,ppwdA),i)
+% contains(secrecyset(idp,1,ppwdA),x37)
 % contains(secrecyset(idp,1,ppwdA),idp)
-% contains(secrecyset(idp,1,ppwdA),x38)
-% secrets(pwd(x38),secrecyset(idp,1,ppwdA),i)
+% state_rA(x37,1,pwd(x37),pk(x39),pk(x38),pk(idp),idp,x38,x39,fphotos,fpresp,fpreq,freq,fgrant,fauth,inv(pseudonym(x37)),inv(confChCr(x37)),inv(authChCr(x37)),pseudonym(x37),Na(1),{fauth,x37,x39,x38,pwd(x37),Na(1)}_(pk(idp)),1)
+% state_rB(x43,0,photos(x45),pk(x46),inv(pk(x43)),pk(x43),pk(idp),idp,x46,x45,fphotos,fpresp,fpreq,freq,fgrant,fauth,inv(pseudonym(x43)),inv(confChCr(x43)),inv(authChCr(x43)),pseudonym(x43),1)
+% state_rP(x40,0,pk(x41),inv(pk(x40)),pk(x40),pk(idp),idp,x41,x42,fphotos,fpresp,fpreq,freq,fgrant,fauth,inv(pseudonym(x40)),inv(confChCr(x40)),inv(authChCr(x40)),pseudonym(x40),1)
 
-The attack trace reveals a clear man-in-the-middle / relay attack. Let me break it down:What happens:
-
-The intruder i impersonates some agent x38 (playing role A) and sends a request to idp
-idp responds with a signed grant token {f2(x38,idp,x39,grant,na)}_inv(pk(idp))
-The intruder forwards this to the real A
-A strips the signature and sends the bare f2(x38,idp,x39,grant,na) to the intruder
-The intruder now has the grant token content in plaintext → can produce photos(x38)
+Grant secrecy attack — carries forward.
+pwd(A) secrecy attack — carries forward.

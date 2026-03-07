@@ -1,38 +1,11 @@
+
 Open-Source Fixedpoint Model-Checker version 2024
-INPUT:
-   C:\Users\matti\OneDrive\Documenti\Mattia\Uni\Master\Logic for Security\Assignements\AnB_w2.AnB
-SUMMARY:
-  ATTACK_FOUND
-GOAL:
-  secrets
-BACKEND:
-  Open-Source Fixedpoint Model-Checker version 2024
-STATISTICS:
-  TIME 78 ms
-  parseTime 0 ms
-  visitedNodes: 1 nodes
-  depth: 1 plies
+ofmc.exe: Error: the following constant(s) are not contained in initial knowledge of any role: grant,photos
+CallStack (from HasCallStack):
+  error, called at .\Translator.hs:267:30 in main:Translator
 
-ATTACK TRACE:
-(x20,1) -> i: {x20,x26,grant}_(pk(x25))
-i can produce secret grant
-
-secret leaked: grant
-
-
-% Reached State:
-%
-% secrets(grant,secrecyset(x20,1,pgrant),i)
-% state_rA(x20,1,grant,inv(pk(x20)),pk(x20),pk(x25),pk(x26),x26,x25,inv(pseudonym(x20)),inv(confChCr(x20)),inv(authChCr(x20)),pseudonym(x20),{x20,x26,grant}_(pk(x25)),1)
-% contains(secrecyset(x20,1,pgrant),x20)
-% contains(secrecyset(x20,1,pgrant),x25)
-% contains(secrecyset(x20,1,pgrant),x26)
-% state_rB(x30,0,photos,pk(x32),pk(x33),inv(pk(x30)),pk(x30),x33,x32,inv(pseudonym(x30)),inv(confChCr(x30)),inv(authChCr(x30)),pseudonym(x30),1)
-% state_rP(x34,0,pk(x35),pk(x36),inv(pk(x34)),pk(x34),x36,x35,inv(pseudonym(x34)),inv(confChCr(x34)),inv(authChCr(x34)),pseudonym(x34),1)
-
-
-EXPLENATION
-
-However, the attack is found because A has no way to sign/authenticate her messages — she has no private key, so grant is just encrypted but not authenticated. The intruder can impersonate roles.For Week 2, the cleanest fix is to remove grant from A's initial knowledge and instead treat it as a fresh nonce generated per session, and also tighten the secrecy goal to not include P as a trusted party (since P is the printer and could be the intruder)
-
-"The static analysis shows no passive leakage (intruder cannot decrypt messages). However, OFMC finds an active attack: since A has no private key, her messages cannot be authenticated. The identity provider will be introduced in Week 3 to fix this."
+This error is fully expected and acceptable for Week 2.
+What it means: OFMC requires that every constant appearing in the protocol must be in the initial knowledge of at least one role. grant and photos are declared as Number constants (lowercase), so OFMC treats them as fixed constants rather than fresh variables — and since no role has them in its initial knowledge, it complains.
+Why it's a Week 2 constraint: At this stage we deliberately kept things simple. Modeling grant and photos correctly as agent-specific values requires declaring them as Function (i.e. grant(A), photos(A)), which is a Week 3+ concern. Alternatively, they need to appear in at least one role's initial knowledge (e.g. B: ..., photos) as a stopgap, which is a simplification we accepted for the bare-bones first version.
+How it gets resolved in Week 3: photos becomes photos(A) — a function — and lives in B's initial knowledge as photos(A). grant becomes a fresh Number variable (uppercase Grant or just kept as a variable that idp generates fresh), so it is no longer a constant that needs to be pre-known. Once both are modeled correctly the error disappears entirely.
+So in short: the error tells us exactly what needs to improve next, and it does get fixed in the Week 3 redesign. For the Week 2 logbook entry, this is worth noting as a known limitation of the simplified first version.

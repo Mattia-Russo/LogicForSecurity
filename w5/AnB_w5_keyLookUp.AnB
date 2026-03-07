@@ -1,20 +1,29 @@
-# In this protocol we just considerend necessary information
+Protocol: KeyLookUp_W5
 
-Protocol: KeyLookUp_W4
+# Week 5 version of the key lookup sub-protocol.
+# A needs to obtain pk(P) and pk(B) from idp before running the main protocol.
+# Since idp is a TLS server, A can establish [A]*->*idp to protect the request.
+# The response still requires idp's signature so A can verify it is authentic
+# and so the key binding can be forwarded.
 
 Types:
     Agent A, P, B, idp;
-    Number na;
-    Format f1, f2, f3
+    Number Na;
+    Format f_keyreq, f_keyresp, f_keypair;
 
 Knowledge:
-    A:   A, P, B, idp, pk(idp), pwd(A), na, f1, f2, f3;
-    idp: A, P, B, idp, pk(idp), inv(pk(idp)), pk(P), pk(B), f1, f2, f3, na;
+    A:   A, P, B, idp, pk(idp), pwd(A);
+    idp: A, P, B, idp, pk(idp), inv(pk(idp)), pk(P), pk(B)
 
 Actions:
-    A   -> idp: {f1(A, P, B, na)}(pk(idp))
-    idp -> A:   {f2(A, f3(P, pk(P)), f3(B, pk(B)), na)}(inv(pk(idp)))
+    # A requests the public keys of P and B from idp over TLS.
+    # [A]*->*idp replaces the explicit pk(idp) encryption from W4.
+    [A]  *->* idp: f_keyreq(A, P, B, Na)
+
+    # idp returns a signed response binding agent names to public keys.
+    # The signature is kept: it is a transferable certificate that A
+    # can later verify without needing another TLS session.
+    idp -> A: {f_keyresp(A, f_keypair(P, pk(P)), f_keypair(B, pk(B)), Na)}inv(pk(idp))
 
 Goals:
-
-    A authenticates idp on f2(A, f2(P, pk(P)), f3(B, pk(B)), na)
+    A authenticates idp on f_keyresp(A, f_keypair(P, pk(P)), f_keypair(B, pk(B)), Na)

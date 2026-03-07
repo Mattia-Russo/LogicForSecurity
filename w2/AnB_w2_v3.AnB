@@ -1,0 +1,102 @@
+Protocol: PhotoPrint_W2
+
+# Simplified Week 2 version: no IdP, all public keys are assumed to be
+# initially known by all agents
+#
+# A authorizes P to access her photos at B by sending a signed grant.
+# P presents the grant to B. B verifies the grant came from A (via A's
+# signature) before releasing the photos.
+#
+# Note: 'photos' is modeled as an abstract Number token representing
+# the photo data returned by B.
+
+Types:
+    Agent A, B, P;
+    Number grant, photos;
+
+Knowledge:
+    A: A, B, P, pk(A), inv(pk(A)), pk(B), pk(P);
+    B: A, B, P, pk(A), pk(B), inv(pk(B)), pk(P);
+    P: A, B, P, pk(A), pk(P), inv(pk(P)), pk(B)
+
+Actions:
+    # A sends P an authorization grant, encrypted for P and signed by A,
+    # so P knows it came from A and the content is confidential.
+    A -> P: {{A, B, grant}inv(pk(A))}pk(P)
+
+    # P forwards the signed grant to B, encrypted for B.
+    # B can verify A's signature and check the grant is for P to access A's photos.
+    P -> B: {{A, B, grant}inv(pk(A))}pk(B)
+
+    # B returns the photos to P, encrypted for P.
+    B -> P: {photos}pk(P)
+
+Goals:
+    grant secret between A, P, B;
+    photos secret between B, P;
+    P authenticates A on grant;
+    B authenticates A on grant
+
+
+
+# =============================================================================
+# Special Task - Week 2: Static Analysis (Dolev-Yao)
+# =============================================================================
+#
+# We assume honest agents run the protocol and the intruder only observes
+# the network (passive attacker). We apply the Dolev-Yao analysis procedure.
+#
+# Intruder's initial knowledge M:
+#   { i, A, B, P, pk(A), pk(B), pk(P), pk(i), inv(pk(i)) }
+#
+# Messages observed on the network (added to M):
+#   msg1 = {{A, B, grant}inv(pk(A))}pk(P)       (A -> P)
+#   msg2 = {{A, B, grant}inv(pk(A))}pk(B)       (P -> B)
+#   msg3 = {photos}pk(P)                        (B -> P)
+#
+# So the intruder's full observation set is:
+#   M = { i, A, B, P, pk(A), pk(B), pk(P), pk(i), inv(pk(i)),
+#         msg1, msg2, msg3 }
+#
+# --- Step 1: Analysis (exhaustively apply analysis rules) ---
+#
+# Apply DecAsym to msg1 = {{A,B,grant}inv(pk(A))}pk(P):
+#   Requires inv(pk(P)). Is M ⊢c inv(pk(P))? No -> cannot decrypt.
+#
+# Apply DecAsym to msg2 = {{A,B,grant}inv(pk(A))}pk(B):
+#   Requires inv(pk(B)). Is M ⊢c inv(pk(B))? No -> cannot decrypt.
+#
+# Apply DecAsym to msg3 = {photos}pk(P):
+#   Requires inv(pk(P)). Is M ⊢c inv(pk(P))? No -> cannot decrypt.
+#
+# No new terms can be added. The Dolev-Yao closure of M equals M itself.
+#
+# --- Step 2: Composition check (M ⊢c t?) ---
+#
+# Can the intruder derive 'grant'?
+#   grant is not in M, and it is not a public function applied to known terms.
+#   => M ⊬ grant
+#
+# Can the intruder derive 'photos'?
+#   photos is not in M, and it cannot be obtained by composition.
+#   => M ⊬ photos
+#
+# Can the intruder derive the inner signed term {A,B,grant}inv(pk(A))?
+#   It appears only inside msg1 and msg2 which cannot be decrypted (see above).
+#   => M ⊬ {A,B,grant}inv(pk(A))
+#
+# --- What the intruder DOES learn ---
+#
+# Although no secret content is revealed, the intruder observes:
+#   - The communication pattern: A talks to P, P talks to B, B replies to P.
+#   - The identities involved: A, B, P are all visible as agent names.
+#   - The ciphertexts themselves (but not their contents).
+#   - The fact that a protocol run between A, P, B is taking place.
+#
+# --- Conclusion ---
+#
+# Under a passive Dolev-Yao attacker, the secrecy of 'grant' and 'photos'
+# is preserved. The intruder cannot decrypt any message because it holds
+# neither inv(pk(P)) nor inv(pk(B)). The Dolev-Yao closure of M does not
+# contain any new terms beyond the ciphertexts themselves.
+# However, the communication metadata (who speaks to whom) is visible.

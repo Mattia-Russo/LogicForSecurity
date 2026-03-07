@@ -1,14 +1,26 @@
-WHY USING TWO DIFFERENT NONCE WHEN A REQUESTS TO IDP pk(P) and pk(B):
-Technically, A could reuse na for both key lookups — but using two separate nonces na and nb is better practice for this reason:
-Nonce reuse conflates two separate exchanges. If A sends na in both requests and idp echoes na back in both responses, 
-A cannot cryptographically distinguish "this response is for my P-key request" from "this response is for my B-key request." 
-An attacker who can replay idp's response to the first request could potentially substitute it as the response to the second, 
-making A believe pk(P) is also the public key of B (or vice versa). By using distinct nonces na and nb, each response is bound 
-to exactly one request, so A can be sure which key certificate answers which query.
+KeyLookUp: verified
+
+Protocol:
+
+Errors resolved from Week 4:
+
+pwd(A) secrecy attack: the TLS pseudonymous channel [A]*->*idp now encrypts step 1 with confChCr(idp), so the password travels confidentially. Looking at the attack trace however, pwd(A) still appears in the leaked secrets set — so it is not fully resolved (see below).
+Grant secrecy attack: not resolved either (see below).
+
+
+Errors encountered in Week 5 and their status:
+1. ATTACK_FOUND on Grant and pwd(A) secrecy — same root attack, still present
+Looking at the trace carefully, the pseudonymous channel is being expanded by OFMC into its cryptographic implementation:
+pseudonym(x35), {{fauth,...,pwd(x35),Na(1)}_inv(pseudonym(x35))}_(confChCr(idp))
+This is OFMC's internal encoding of [A]*->*idp. The channel uses a fresh pseudonym key pseudonym(x35) for A — but crucially, A's side of the channel is signed with inv(pseudonym(x35)), a fresh private key that is not bound to any known identity. The intruder can therefore intercept the whole thing, forward it to idp, and receive the grant back — because idp has no way to verify who the pseudonymous sender is. The channel protects confidentiality of the payload (idp's confChCr(idp) key encrypts it), but the reply {fgrant,...}inv(pk(idp)) is still a bare signature that anyone can open.
+This is the same structural problem as all previous weeks: Grant leaks via OpenSig on idp's signed response, and pwd(A) leaks because the pseudonymous channel does not prevent a forwarding attack — the intruder just relays the channel message wholesale.
+Why it cannot be fixed at Week 5: the pseudonymous channel notation, as noted in the slides, does not provide freshness or identity binding on the client side. The intruder can always act as a relay. Resolving this would require either A having a real public key pair (outside the scenario constraints) or binding the grant response inside the TLS channel encryption — which goes beyond what OFMC's pseudonymous channel notation models.
+
+Errors remaining unresolved at end of Week 5:
 
 Open-Source Fixedpoint Model-Checker version 2024
 INPUT:
-   C:\Users\matti\OneDrive\Documenti\Mattia\Uni\Master\Logic for Security\Assignements\w4\AnB_w4_v1.AnB
+   C:\Users\matti\OneDrive\Documenti\Mattia\Uni\Master\Logic for Security\Assignements\w5\AnB_w5_v2.AnB
 SUMMARY:
   ATTACK_FOUND
 GOAL:
@@ -16,45 +28,34 @@ GOAL:
 BACKEND:
   Open-Source Fixedpoint Model-Checker version 2024
 STATISTICS:
-  TIME 78 ms
+  TIME 328 ms
   parseTime 0 ms
-  visitedNodes: 14 nodes
-  depth: 3 plies
+  visitedNodes: 6 nodes
+  depth: 2 plies
 
 ATTACK TRACE:
-(x38,1) -> i: {f1(x38,idp,x39,pwd(x38),na)}_(pk(idp))
-i -> (idp,1): {f1(x38,idp,x39,pwd(x38),na)}_(pk(idp))
-(idp,1) -> i: {f2(x38,idp,x39,grant,na)}_inv(pk(idp))
-i -> (x38,1): {f2(x38,idp,x39,grant,na)}_inv(pk(idp))
-(x38,1) -> i: f2(x38,idp,x39,grant,na)
-i can produce secret photos(x38)
+(x35,1) -> i: pseudonym(x35),{{fauth,x35,x37,x36,pwd(x35),Na(1)}_inv(pseudonym(x35))}_(confChCr(idp))
+i -> (idp,1): pseudonym(x35),{{fauth,x35,x37,x36,pwd(x35),Na(1)}_inv(pseudonym(x35))}_(confChCr(idp))
+(idp,1) -> i: {fgrant,x35,x37,x36,Grant(2),Na(1)}_inv(pk(idp))
+i can produce secret Grant(2)
 
-secret leaked: photos(x38)
+secret leaked: Grant(2)
 
 
 % Reached State:
 %
-% secrets(photos(x38),secrecyset(x38,1,pphotosA),i)
-% state_rA(x38,2,f4,f3,f2,f1,photos(x38),na,pk(idp),pk(x39),pwd(x38),pk(idp),idp,x39,idp,inv(pseudonym(x38)),inv(confChCr(x38)),inv(authChCr(x38)),pseudonym(x38),{f1(x38,idp,x39,pwd(x38),na)}_(pk(idp)),f2(x38,idp,x39,grant,na),{f2(x38,idp,x39,grant,na)}_inv(pk(idp)),f2(x38,idp,x39,grant,na),1)
-% contains(secrecyset(x38,1,pphotosA),x38)
-% contains(secrecyset(x38,1,pphotosA),x39)
-% contains(secrecyset(x38,1,pphotosA),idp)
-% secrets(pwd(x38),secrecyset(x38,1,ppwdA),i)
-% contains(secrecyset(x38,1,ppwdA),x38)
-% contains(secrecyset(x38,1,ppwdA),idp)
-% request(x38,idp,pAidpf2APBgrantna,f2(x38,idp,x39,grant,na),1)
-% state_ridp(idp,1,f4,f3,f2,f1,na,grant,pwd(x38),pk(x39),pk(idp),inv(pk(idp)),pk(idp),x39,idp,x38,inv(pseudonym(idp)),inv(confChCr(idp)),inv(authChCr(idp)),pseudonym(idp),{f1(x38,idp,x39,pwd(x38),na)}_(pk(idp)),{f2(x38,idp,x39,grant,na)}_inv(pk(idp)),1)
-% state_rB(x45,0,f3,f2,photos(x38),pk(x47),inv(pk(x45)),pk(x45),pk(idp),idp,x47,x38,inv(pseudonym(x45)),inv(confChCr(x45)),inv(authChCr(x45)),pseudonym(x45),1)
-% state_rP(x41,0,f3,f2,np,pk(x43),inv(pk(x41)),pk(x41),pk(idp),idp,x43,x44,inv(pseudonym(x41)),inv(confChCr(x41)),inv(authChCr(x41)),pseudonym(x41),1)
-% witness(idp,x38,pAidpf2APBgrantna,f2(x38,idp,x39,grant,na))
+% secrets(Grant(2),secrecyset(idp,1,pGrant),i)
+% state_ridp(idp,1,pwd(x35),pk(x36),pk(x37),inv(pk(idp)),pk(idp),x36,x37,x35,fphotos,freq,fgrant,fauth,inv(pseudonym(idp)),inv(confChCr(idp)),inv(authChCr(idp)),pseudonym(idp),Na(1),{fauth,x35,x37,x36,pwd(x35),Na(1)}_inv(pseudonym(x35)),{{fauth,x35,x37,x36,pwd(x35),Na(1)}_inv(pseudonym(x35))}_(confChCr(idp)),pseudonym(x35),pseudonym(x35),{{fauth,x35,x37,x36,pwd(x35),Na(1)}_inv(pseudonym(x35))}_(confChCr(idp)),Grant(2),{fgrant,x35,x37,x36,Grant(2),Na(1)}_inv(pk(idp)),1)
+% contains(secrecyset(idp,1,pGrant),x35)
+% contains(secrecyset(idp,1,pGrant),idp)
+% contains(secrecyset(idp,1,pGrant),x37)
+% contains(secrecyset(idp,1,pGrant),x36)
+% secrets(pwd(x35),secrecyset(idp,1,ppwdA),i)
+% contains(secrecyset(idp,1,ppwdA),x35)
 % contains(secrecyset(idp,1,ppwdA),idp)
-% contains(secrecyset(idp,1,ppwdA),x38)
-% secrets(pwd(x38),secrecyset(idp,1,ppwdA),i)
+% state_rA(x35,1,pwd(x35),pk(x37),pk(x36),pk(idp),idp,x36,x37,fphotos,freq,fgrant,fauth,inv(pseudonym(x35)),inv(confChCr(x35)),inv(authChCr(x35)),pseudonym(x35),Na(1),pseudonym(x35),{{fauth,x35,x37,x36,pwd(x35),Na(1)}_inv(pseudonym(x35))}_(confChCr(idp)),1)
+% state_rB(x41,0,photos(x43),pk(x44),inv(pk(x41)),pk(x41),pk(idp),idp,x44,x43,fphotos,freq,fgrant,fauth,inv(pseudonym(x41)),inv(confChCr(x41)),inv(authChCr(x41)),pseudonym(x41),1)
+% state_rP(x38,0,pk(x39),inv(pk(x38)),pk(x38),pk(idp),idp,x39,x40,fphotos,freq,fgrant,fauth,inv(pseudonym(x38)),inv(confChCr(x38)),inv(authChCr(x38)),pseudonym(x38),1)
 
-The attack trace reveals a clear man-in-the-middle / relay attack. Let me break it down:What happens:
-
-The intruder i impersonates some agent x38 (playing role A) and sends a request to idp
-idp responds with a signed grant token {f2(x38,idp,x39,grant,na)}_inv(pk(idp))
-The intruder forwards this to the real A
-A strips the signature and sends the bare f2(x38,idp,x39,grant,na) to the intruder
-The intruder now has the grant token content in plaintext → can produce photos(x38)
+Grant secrecy attack — structural limitation of the scenario, carries through all weeks.
+pwd(A) secrecy attack — the TLS channel protects the payload from passive eavesdropping but not from a forwarding/relay attack. Remains a known limitation consistent with the spec's constraint that the password must not be used as an encryption key.

@@ -1,0 +1,102 @@
+Protocol: PhotoPrint_W5
+
+# Week 5: TLS pseudonymous channel variant.
+#
+# In our scenario:
+#   - idp has a public key and acts as a TLS server  => A can open [A] *->* idp
+#   - P has a public key and acts as a TLS server    => A can open [A] *->* P
+#   - B has a public key and acts as a TLS server    => P can open [P] *->* B
+#
+# With TLS (server-only auth), the channel [A] *->* idp means:
+#   - A knows she is talking to idp (server authenticated via pk(idp))
+#   - idp does NOT know who A is until A authenticates at the application layer
+
+Types:
+    Agent A, P, B, idp;
+    Number Grant, Na, Np;
+    Function pwd, photos;
+    Format f_auth, f_grant, f_req, f_photos;
+
+Knowledge:
+    A:   A, P, B, idp, pk(idp), pk(B), pk(P), pwd(A);
+    idp: A, P, B, idp, pk(idp), inv(pk(idp)), pk(P), pk(B), pwd(A);
+    P:   A, P, B, idp, pk(idp), pk(P), inv(pk(P)), pk(B);
+    B:   A, P, B, idp, pk(idp), pk(B), inv(pk(B)), pk(P), photos(A)
+
+Actions:
+    # Step 1: A authenticates to idp over a TLS channel (idp is TLS server).
+    # [A] *->* idp replaces the outer pk(idp) encryption.
+    # pwd(A) and Na travel in plaintext within the secure channel.
+    [A]  *->* idp: f_auth(A, P, B, pwd(A), Na)
+
+    # Step 2: idp issues the signed Grant. This message travels back to A
+    # over the same TLS session. The signature lets A, P, and B verify
+    # it independently.
+    idp -> A:   {f_grant(A, P, B, Grant, Na)}inv(pk(idp))
+
+    # Step 3: A forwards the signed Grant to P over a TLS channel to P.
+    # The outer pk(P) encryption is replaced by [A]*->*P.
+    # The inner idp signature is kept: P must verify it came from idp.
+    [A]  *->* P: {f_grant(A, P, B, Grant, Na)}inv(pk(idp))
+
+    # Step 4: P presents the Grant to B over a TLS channel to B.
+    # The outer pk(B) encryption is replaced by [P]*->*B.
+    # The inner idp signature is kept for B to verify.
+    [P]  *->* B: f_req({f_grant(A, P, B, Grant, Na)}inv(pk(idp)), Np)
+
+    # Step 5: B returns the photos to P over the same TLS session.
+    # Since [P]*->*B was established in step 4, B can reply confidentially.
+    # The outer pk(P) encryption is replaced by the channel reply direction.
+    B    *->* [P]: f_photos(photos(A), Np)
+
+Goals:
+    Grant secret between A, idp, P, B;
+    photos(A) secret between B, P;
+    pwd(A) secret between A, idp;
+    P authenticates A on Grant;
+    B authenticates A on Grant;
+    P authenticates B on Np
+
+
+# =============================================================================
+# Special Task — Week 5: Pseudonymous Channel Variant
+# =============================================================================
+#
+# The task asks us to replace as much cryptography as possible with
+# pseudonymous channel notation and to explain the modeling.
+#
+# Summary of replacements made:
+#
+# 1. Step 1 was {f_auth(A,P,B,pwd(A),Na)}pk(idp)
+#    => Replaced by [A] *->* idp : f_auth(A,P,B,pwd(A),Na)
+#    Justification: TLS with server-only auth gives exactly a
+#    pseudonymous secure channel to the server (idp). The outer
+#    asymmetric encryption pk(idp) is subsumed by the TLS encryption.
+#
+# 2. Step 2 remains {f_grant(...)}inv(pk(idp))  [NOT replaced]
+#    Justification: The signature is a transferable credential that
+#    A, P, and B all need to verify independently. A TLS channel only
+#    protects the transmission; it does not produce a verifiable token
+#    that can be forwarded. The signature must stay.
+#
+# 3. Step 3 was {{f_grant(...)}inv(pk(idp))}pk(P)
+#    => Replaced by [A] *->* P : {f_grant(...)}inv(pk(idp))
+#    Justification: The outer pk(P) encryption is replaced by the
+#    TLS channel to P. The inner idp signature is kept (see point 2).
+#
+# 4. Step 4 was {f_req({f_grant(...)}inv(pk(idp)), Np)}pk(B)
+#    => Replaced by [P] *->* B : f_req({f_grant(...)}inv(pk(idp)), Np)
+#    Justification: The pk(B) encryption is replaced by the TLS
+#    channel to B. The inner idp signature is kept.
+#
+# 5. Step 5 was {f_photos(photos(A), Np)}pk(P)
+#    => Replaced by B *->* [P] : f_photos(photos(A), Np)
+#    Justification: The pk(P) encryption is replaced by B's reply
+#    on the established TLS session. B is authenticated (TLS server),
+#    P is pseudonymous (TLS client).
+#
+# Remaining cryptography: only the idp signature {f_grant(...)}inv(pk(idp))
+# and pwd(A) (which is an application-level credential, not a channel key).
+#
+# Caveat: as noted in the slides, pseudonymous channels do NOT provide
+# freshness. Our nonces Na and Np remain necessary to prevent replay attacks.

@@ -1,0 +1,60 @@
+KeyLookUp: 
+
+@startuml KeyLookUp_W4
+title KeyLookUp — Week 4
+
+participant "A\n(User)" as A
+participant "IdP\n(Identity Provider)" as IDP
+
+activate A
+
+A -> IDP : {f_keyreq(A, P, B, Na)}pk(idp)
+note right: Key request \n fresh nonce Na \n encrypted for IdP
+activate IDP
+
+IDP --> A : {f_keyresp(A, f_keypair(P,pk(P)), f_keypair(B,pk(B)), Na)}inv(pk(idp))
+note right: Signed response \n binding agents to their public keys
+deactivate IDP
+
+deactivate A
+
+@enduml
+
+Protocol:
+
+@startuml PhotoPrint_W4
+title PhotoPrint — Week 4
+
+participant "A\n(User)" as A
+participant "IdP\n(Identity Provider)" as IDP
+participant "P\n(Photo Service)" as P
+participant "B\n(Storage Server)" as B
+
+note over A : A obtains pk(P) and pk(B) \n via KeyLookUp sub-protocol
+
+activate A
+
+A -> IDP : {f_auth(A, P, B, pwd(A), Na)}pk(idp)
+note right: f_auth format \n password + nonce Na \n encrypted for IdP
+activate IDP
+
+IDP --> A : {f_grant(A, P, B, Grant, Na)}inv(pk(idp))
+note right: f_grant format \n signed grant token
+deactivate IDP
+
+A -> P : {{f_grant(A, P, B, Grant, Na)}inv(pk(idp))}pk(P)
+note right: Signed grant \n encrypted for P
+activate P
+
+P -> B : {f_req({f_grant(A,P,B,Grant,Na)}inv(pk(idp)), Np)}pk(B) 
+note right: f_req format \n grant + fresh nonce Np \n encrypted for B
+activate B
+
+B --> P : {f_photos(photos(A), Np)}pk(P)
+note right: f_photos format \n photos + Np \n encrypted for P
+deactivate B
+
+deactivate P
+deactivate A
+
+@enduml

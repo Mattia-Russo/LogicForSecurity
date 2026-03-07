@@ -1,0 +1,60 @@
+KeyLookUp:
+
+@startuml KeyLookUp_W5
+title KeyLookUp — Week 5
+
+participant "A\n(User)" as A
+participant "IdP\n(Identity Provider)" as IDP
+
+activate A
+
+A -> IDP : [A] *->* IdP\nf_keyreq(A, P, B, Na)
+note right: TLS channel replaces \n explicit pk(idp) encryption
+activate IDP
+
+IDP --> A : {f_keyresp(A, f_keypair(P,pk(P)), f_keypair(B,pk(B)), Na)}inv(pk(idp))
+note right: Signature kept: \n transferable certificate \n verifiable without TLS session
+deactivate IDP
+
+deactivate A
+
+@enduml
+
+Protocol:
+
+@startuml PhotoPrint_W5
+title PhotoPrint — Week 5\n(TLS pseudonymous channels replace explicit encryption)
+
+participant "A\n(User)" as A
+participant "IdP\n(Identity Provider)" as IDP
+participant "P\n(Photo Service)" as P
+participant "B\n(Storage Server)" as B
+
+note over A : A obtains pk(P) and pk(B) \n via KeyLookUp_W5
+
+activate A
+
+A -> IDP : [A] *->* IdP\nf_auth(A, P, B, pwd(A), Na)
+note right: TLS channel to IdP \n replaces {f_auth(...)}pk(idp) \n pwd(A) protected by TLS
+activate IDP
+
+IDP --> A : {f_grant(A, P, B, Grant, Na)}inv(pk(idp))
+note right: Signature kept: \n transferable credential \n for P and B to verify
+deactivate IDP
+
+A -> P : [A] *->* P\n{f_grant(A, P, B, Grant, Na)}inv(pk(idp)) 
+note right: TLS channel to P \n replaces outer pk(P) encryption \n inner signature kept for P to verify
+activate P
+
+P -> B : [P] *->* B\nf_req({f_grant(A,P,B,Grant,Na)}inv(pk(idp)), Np)
+note right: TLS channel to B \n replaces pk(B) encryption \n inner signature kept for B to verify
+activate B
+
+B --> P : B *->* [P] \n f_photos(photos(A), Np)
+note right: TLS reply direction \n replaces {f_photos(...)}pk(P)
+deactivate B
+
+deactivate P
+deactivate A
+
+@enduml

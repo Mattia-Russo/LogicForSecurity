@@ -1,24 +1,27 @@
 PLANT UML sequence diagram for the above execution:
 
-@startuml
+@startuml PhotoPrint_W2
+title PhotoPrint — Week 2\n
 
-title Open Authorization Protocol (Week 2 - Simplified, no IDP)
+participant "A\n(User)" as A
+participant "P\n(Photo Service)" as P
+participant "B\n(Storage Server)" as B
 
-participant A as "A (User)"
-participant P as "P (Photo Book Service)"
-participant B as "B (Photo Storage)"
+activate A
 
-== Phase 1: Authorization Request ==
+A -> P : {{A, B, Grant}inv(pk(A))}pk(P)
+note right: Authorization grant \n signed by A, encrypted for P
+activate P
 
-A -> P: {A, B, grant}pk(P)
-note right: A sends P an authorization grant\nto access her photos on B.\nEncrypted so only P can read it.
+P -> B : {{A, B, Grant}inv(pk(A))}pk(B)
+note right: Grant forwarded to B \n encrypted for B
+activate B
 
-== Phase 2: Resource Access ==
+B --> P : {Photos}pk(P)
+note right: Photos returned \n encrypted for P
+deactivate B
 
-P -> B: {A, P, grant}pk(B)
-note right: P presents the grant to B\non behalf of A.\nEncrypted so only B can read it.
-
-B -> P: {photos}pk(P)
-note right: B verifies the grant and\nreturns photos encrypted for P only.
+deactivate P
+deactivate A
 
 @enduml
