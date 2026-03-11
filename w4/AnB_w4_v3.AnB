@@ -2,7 +2,7 @@ Protocol: PhotoPrint
 
 Types:
     Agent A, P, B, idp;
-    Number Res, Authcode, SessionID, Grant, Nb, Ni, Np, Nc, Nd, PhotosA;
+    Number Res, Authcode, SessionID, Nb, Ni, Np, Nc, Nd, PhotosA;
     Function pwd;
     Format f_accessreq, f_sessionid, f_authreq, f_pwdreq, f_pwd, f_consent, f_authcode, f_req, f_photos;
 
