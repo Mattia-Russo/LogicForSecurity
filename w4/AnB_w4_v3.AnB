@@ -33,18 +33,18 @@ Actions:
 
     P -> B: {{f_req(A, P, B, Res, Authcode, SessionID, Np, Nc)}inv(pk(P))}pk(B)
 
-    B -> P:   {{f_photos(A, P, B, Res, PhotosA, SessionID, Authcode, Nc)}inv(pk(B))}pk(P)
+    B -> P: {{f_photos(A, P, B, Res, PhotosA, SessionID, Authcode, Nc)}inv(pk(B))}pk(P)
 
 
 Goals:
     PhotosA secret between B, P;
     pwd(A, idp) secret between A, idp;
     
-    B authenticates P on f_accessreq(A,P,B,Res,Nd)
-    P authenticates B on f_sessionid(A,P,B,Res,SessionID,Nd)
-    B authenticates P on f_sessionid(A,P,B,Res,SessionID)
+    B authenticates P on f_accessreq(A, P, B, Res, Nd)
+    P authenticates B on f_sessionid(A, P, B, Res, SessionID, Nd)
+    B authenticates P on f_sessionid(A, P, B, Res, SessionID, Nd)
     idp authenticates A on f_pwd(A, P, B, Res, pwd(A, idp), Nb, SessionID, Ni)
-    B authenticates idp on f_consent(A,B,P,Res,Nb,SessionID)
-    P authenticates B on f_authcode(A,B,P,Res,Authcode,SessionID,Np)
-    B authenticates P on f_req(A,P,B,Res,Authcode,SessionID,Np,Nc)
-    P authenticates B on f_photos(A,P,B,Res,PhotosA,SessionID,Authcode,Nc)
+    B authenticates idp on f_consent(A, B, P, Res, Nb, SessionID)
+    P authenticates B on f_authcode(A, B, P, Res, Authcode, SessionID, Np)
+    B authenticates P on f_req(A, P, B, Res, Authcode, SessionID, Np, Nc)
+    P authenticates B on f_photos(A, P, B, Res, PhotosA, SessionID, Authcode, Nc)
