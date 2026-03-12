@@ -9,3 +9,46 @@ What it means: OFMC requires that every constant appearing in the protocol must 
 Why it's a Week 2 constraint: At this stage we deliberately kept things simple. Modeling grant and photos correctly as agent-specific values requires declaring them as Function (i.e. grant(A), photos(A)), which is a Week 3+ concern. Alternatively, they need to appear in at least one role's initial knowledge (e.g. B: ..., photos) as a stopgap, which is a simplification we accepted for the bare-bones first version.
 How it gets resolved in Week 3: photos becomes photos(A) — a function — and lives in B's initial knowledge as photos(A). grant becomes a fresh Number variable (uppercase Grant or just kept as a variable that idp generates fresh), so it is no longer a constant that needs to be pre-known. Once both are modeled correctly the error disappears entirely.
 So in short: the error tells us exactly what needs to improve next, and it does get fixed in the Week 3 redesign. For the Week 2 logbook entry, this is worth noting as a known limitation of the simplified first version.
+
+Open-Source Fixedpoint Model-Checker version 2024
+INPUT:
+   C:\Users\matti\OneDrive\Documenti\Mattia\Uni\Master\Logic for Security\Assignements\w2\AnB_w2_v3.AnB
+SUMMARY:
+  ATTACK_FOUND
+GOAL:
+  secrets
+BACKEND:
+  Open-Source Fixedpoint Model-Checker version 2024
+STATISTICS:
+  TIME 93 ms
+  parseTime 15 ms
+  visitedNodes: 1 nodes
+  depth: 1 plies
+
+ATTACK TRACE:
+(x20,1) -> i: x20,x25,Grant(1)
+i can produce secret Grant(1)
+
+secret leaked: Grant(1)
+
+
+% Reached State:
+%
+% secrets(Grant(1),secrecyset(x20,1,pGrant),i)
+% state_rA(x20,1,pk(x20),pk(x25),inv(pk(x20)),pk(x20),x20,x25,inv(pseudonym(x20)),inv(confChCr(x20)),inv(authChCr(x20)),pseudonym(x20),Grant(1),x20,x25,Grant(1),1)
+% contains(secrecyset(x20,1,pGrant),x20)
+% contains(secrecyset(x20,1,pGrant),x25)
+% witness(x20,x20,pPAGrant,Grant(1))
+% witness(x20,x25,pBAGrant,Grant(1))
+% state_rB(x29,0,photos,pk(x31),inv(pk(x29)),pk(x29),pk(x32),x31,x32,inv(pseudonym(x29)),inv(confChCr(x29)),inv(authChCr(x29)),pseudonym(x29),1)
+% state_rP(x33,0,pk(x34),inv(pk(x33)),pk(x33),pk(x35),x34,x35,inv(pseudonym(x33)),inv(confChCr(x33)),inv(authChCr(x33)),pseudonym(x33),1)
+
+Option 1: Weaken the secrecy goal (most appropriate for w2)
+Instead of claiming Grant is secret in all sessions, scope it to honest runs only. In AnB, the standard way is to use a secret goal only for values that are truly generated as session secrets. Since Grant is sent to P and forwarded to B, it's inherently known to all three — the real threat is the intruder learning it.
+Change:
+Grant secret between A, P, B;
+To:
+Grant secret between A, P;
+...since B only needs to verify it, not keep it secret. Or consider dropping the secrecy goal for Grant altogether and relying only on authentication — which is the real security property here.
+Option 2: Keep goals, fix the model intent
+If Grant must stay secret among A, P, B, you need to acknowledge that OFMC is correctly identifying that in a session where the intruder plays one of the roles, the secret leaks. This is expected and acceptable — the protocol is secure for honest principals.

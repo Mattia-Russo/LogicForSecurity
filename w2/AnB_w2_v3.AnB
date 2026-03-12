@@ -15,8 +15,8 @@ Types:
     Number grant, photos;
 
 Knowledge:
-    A: A, B, P, pk(A), inv(pk(A)), pk(B), pk(P);
-    B: A, B, P, pk(A), pk(B), inv(pk(B)), pk(P);
+    A: A, B, P, pk(A), inv(pk(A)), pk(B), pk(P), grant;
+    B: A, B, P, pk(A), pk(B), inv(pk(B)), pk(P), photos;
     P: A, B, P, pk(A), pk(P), inv(pk(P)), pk(B)
 
 Actions:
@@ -26,13 +26,13 @@ Actions:
 
     # P forwards the signed grant to B, encrypted for B.
     # B can verify A's signature and check the grant is for P to access A's photos.
-    P -> B: {{A, B, grant}inv(pk(A))}pk(B)
+    P -> B: {{A, B, grant}inv(pk(A))}pk(B), P
 
     # B returns the photos to P, encrypted for P.
     B -> P: {photos}pk(P)
 
 Goals:
-    grant secret between A, P, B;
+    grant secret between A, B, P;
     photos secret between B, P;
     P authenticates A on grant;
     B authenticates A on grant

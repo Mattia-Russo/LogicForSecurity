@@ -16,7 +16,7 @@ Types:
     Function pwd, photos;
 
 Knowledge:
-    A:   A, P, B, idp, pk(idp), pk(B), pk(P), pwd(A);
+    A:   A, P, B, idp, pk(idp), pk(B), pk(P), pwd(A), photos(A);
     idp: A, P, B, idp, pk(idp), inv(pk(idp)), pk(P), pk(B), pwd(A);
     P:   A, P, B, idp, pk(idp), pk(P), inv(pk(P)), pk(B);
     B:   A, P, B, idp, pk(idp), pk(B), inv(pk(B)), pk(P), photos(A)
@@ -44,7 +44,7 @@ Actions:
 
 Goals:
     Grant secret between A, idp, P, B;
-    photos(A) secret between B, P;
+    photos(A) secret between A, B, P;
     P authenticates A on Grant;
     B authenticates A on Grant;
     P authenticates B on Np
