@@ -8,7 +8,7 @@ Types:
 
 Knowledge:
     A:   A, P, B, idp, pk(idp), pk(B), pk(P), pwd(A, idp);
-    idp: A, P, B, idp, pk(idp), inv(pk(idp)), pk(P), pk(B), pwd(A, idp);
+    idp: A, P, B, idp, pk(idp), inv(pk(idp)), pk(P), pk(B), pwd(A);
     P:   A, P, B, idp, pk(idp), pk(P), inv(pk(P)), pk(B);
     B:   A, P, B, idp, pk(idp), pk(B), inv(pk(B)), pk(P)
 
@@ -25,7 +25,7 @@ Actions:
 
     idp -> A: {f_pwdreq(A, P, B, Res, Nb, SessionID, Ni)}inv(pk(idp))
 
-    A -> idp: {f_pwd(A, P, B, Res, pwd(A, idp), Nb, SessionID, Ni)}pk(idp)
+    A -> idp: {f_pwd(A, P, B, Res, pwd(A), Nb, SessionID, Ni)}pk(idp)
 
     idp -> B: {{f_consent(A, B, P, Res, Nb, SessionID)}inv(pk(idp))}pk(B)
 
@@ -38,7 +38,7 @@ Actions:
 
 Goals:
     PhotosA secret between B, P;
-    pwd(A, idp) secret between A, idp;
+    pwd(A) secret between A, idp;
     
     B authenticates P on f_accessreq(A, P, B, Res, Nd)
     P authenticates B on f_sessionid(A, P, B, Res, SessionID, Nd)
