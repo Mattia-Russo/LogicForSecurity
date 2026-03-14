@@ -60,3 +60,27 @@ secret leaked: Grant(2)
 
 Grant secrecy attack — carries forward.
 pwd(A) secrecy attack — carries forward.
+
+#Updated attack:
+
+ATTACK TRACE:
+(x41,1) -> i: {{faccessreq,i,x41,x41,Res(1),Nd(1)}_inv(pk(x41))}_(pk(x41))
+i -> (x41,1): {{faccessreq,i,x41,x41,Res(1),Nd(1)}_inv(pk(x41))}_(pk(x41))
+(x41,1) -> i: {{fsessionid,i,x41,x41,Res(1),SessionID(2),Nd(1)}_inv(pk(x41))}_(pk(x41))
+i -> (x41,1): {{fsessionid,i,x41,x41,Res(1),SessionID(2),Nd(1)}_inv(pk(x41))}_(pk(x41))
+(x41,1) -> i: {{fsessionid,i,x41,x41,Res(1),SessionID(2),Nd(1)}_inv(pk(x41))}_(pk(x41))
+i -> (x41,1): {{fsessionid,i,x41,x41,Res(1),SessionID(2),Nd(1)}_inv(pk(x41))}_(pk(x41))
+(x41,1) -> i: {{fauthreq,i,x41,x41,Res(1),Nb(4),SessionID(2)}_inv(pk(x41))}_(pk(idp))
+i -> (idp,1): {{fauthreq,i,x41,x41,Res(1),Nb(4),SessionID(2)}_inv(pk(x41))}_(pk(idp))
+(idp,1) -> i: {fpwdreq,i,x41,x41,Res(1),Nb(4),SessionID(2),Ni(5)}_inv(pk(idp))
+i -> (idp,1): {fpwd,i,x41,x41,Res(1),pwd(i),Nb(4),SessionID(2),Ni(5)}_(pk(idp))
+(idp,1) -> i: {{fconsent,i,x41,x41,Res(1),Nb(4),SessionID(2)}_inv(pk(idp))}_(pk(x41))
+i -> (x41,1): {{fconsent,i,x41,x41,Res(1),Nb(4),SessionID(2)}_inv(pk(idp))}_(pk(x41))
+(x41,1) -> i: {{fauthcode,i,x41,x41,Res(1),Authcode(7),SessionID(2),Np(7)}_inv(pk(x41))}_(pk(x41))
+i -> (x41,1): {{fauthcode,i,x41,x41,Res(1),Authcode(7),SessionID(2),Np(7)}_inv(pk(x41))}_(pk(x41))
+(x41,1) -> i: {{freq,i,x41,x41,Res(1),Authcode(7),SessionID(2),Np(7),Nc(8)}_inv(pk(x41))}_(pk(x41))
+i -> (x41,1): {{freq,i,x41,x41,Res(1),Authcode(7),SessionID(2),Np(7),Nc(8)}_inv(pk(x41))}_(pk(x41))
+(x41,1) -> i: fphotos,i,x41,x41,Res(1),PhotosA(9),SessionID(2),Authcode(7),Nc(8)
+i can produce secret PhotosA(9)
+
+secret leaked: PhotosA(9)
