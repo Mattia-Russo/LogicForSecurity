@@ -21,7 +21,7 @@ Protocol: PhotoPrint_W2
 
 Types:
     Agent A, P, B;
-    Number Na, Np, PhotosA;
+    Number Na, Np;
     Function photos
 
 Knowledge:
