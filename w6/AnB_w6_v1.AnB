@@ -1,3 +1,5 @@
+Protocol: PhotoPrint_w6
+
 Types:
     Agent A, P, B, idp;
     Number Res, Authcode, SessionID, Nb, Ni, Np, Nc, Nd, PhotosA;
