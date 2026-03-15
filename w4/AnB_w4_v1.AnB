@@ -1,7 +1,11 @@
 Protocol: PhotoPrint
+Protocol: PhotoPrint
 
 Types:
     Agent A, P, B, idp;
+    Number Res, Authcode, SessionID, Nb, Ni, Np, Nc, Nd, PhotosA;
+    Function pwd;
+    Format f_accessreq, f_sessionid, f_authreq, f_pwdreq, f_pwd, f_consent, f_authcode, f_req, f_photos;
     Number Res, Authcode, SessionID, Nb, Ni, Np, Nc, Nd, PhotosA;
     Function pwd;
     Format f_accessreq, f_sessionid, f_authreq, f_pwdreq, f_pwd, f_consent, f_authcode, f_req, f_photos;
@@ -15,6 +19,7 @@ Knowledge:
 where B!=P
 
 Actions:
+    P -> B: {{f_accessreq(A, P, B, Res, Nd)}inv(pk(P))}pk(B)
     P -> B: {{f_accessreq(A, P, B, Res, Nd)}inv(pk(P))}pk(B)
 
     B -> P: {{f_sessionid(A, P, B, Res, SessionID, Nd)}inv(pk(B))}pk(P)

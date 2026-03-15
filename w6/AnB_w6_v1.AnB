@@ -1,0 +1,78 @@
+Protocol: PhotoPrint_w6
+
+Types:
+    Agent A, P, B, idp;
+    Number Res, Authcode, SessionID, Nb, Ni, Np, Nc, Nd, PhotosA;
+    Function pwd;
+    Format f_accessreq, f_sessionid, f_authreq, f_pwdreq, f_pwd, f_consent, f_authcode, f_req, f_photos
+
+Knowledge:
+    A:   A, P, B, idp, pk(idp), pwd(A, idp);
+    idp: A, P, B, idp, pk(idp), inv(pk(idp)), pk(P), pk(B), pwd(A, idp);
+    P:   A, P, B, idp, pk(idp), pk(P), inv(pk(P)), pk(B);
+    B:   A, P, B, idp, pk(idp), pk(B), inv(pk(B)), pk(P)
+
+where B!=P
+
+Actions:
+    # Step 1: P -> B: access request
+    # P connects to B over TLS (B is authenticated server).
+    # We keep the signed content so B knows it is P (not just a pseudonym).
+    [P] *->* B: {f_accessreq(A, P, B, Res, Nd)}inv(pk(P))
+
+    # Step 2: B -> P: session ID
+    # B replies on the TLS channel back to pseudonymous P.
+    B *->* [P]: {f_sessionid(A, P, B, Res, SessionID, Nd)}inv(pk(B))
+
+    # Step 3: P -> B: echo session ID (P authenticates to B)
+    # P re-sends signed session ID back over TLS.
+    [P] *->* B: {f_sessionid(A, P, B, Res, SessionID, Nd)}inv(pk(P))
+
+    # Step 4: B -> idp: auth request
+    # B connects to idp over TLS (idp is authenticated server).
+    # B signs the request so idp knows it is B.
+    [B] *->* idp: {f_authreq(A, P, B, Res, Nb, SessionID)}inv(pk(B))
+
+    # Step 5: idp -> A: password request
+    # idp replies to A (browser redirect) over TLS (idp is server).
+    # Signed by idp so A can verify it came from idp.
+    idp *->* [A]: {f_pwdreq(A, P, B, Res, Nb, SessionID, Ni)}inv(pk(idp))
+
+    # Step 6: A -> idp: password submission
+    # A sends password over TLS channel to idp (idp is server).
+    # The channel confidentiality protects the password; no extra
+    # encryption needed since [A] *->* idp already ensures confidentiality.
+    [A] *->* idp: f_pwd(A, P, B, Res, pwd(A, idp), Nb, SessionID, Ni)
+
+    # Step 7: idp -> B: consent token
+    # idp replies to B on the TLS channel (B is the authenticated client here).
+    # Signed by idp so B can verify.
+    idp *->* [B]: {f_consent(A, B, P, Res, Nb, SessionID)}inv(pk(idp))
+
+    # Step 8: B -> P: auth code
+    # B connects to P over TLS (P is authenticated server).
+    # B signs so P knows it is B.
+    [B] *->* P: {f_authcode(A, B, P, Res, Authcode, SessionID, Np)}inv(pk(B))
+
+    # Step 9: P -> B: resource request with auth code
+    # P connects to B over TLS (B is authenticated server).
+    # P signs so B knows it is P.
+    [P] *->* B: {f_req(A, P, B, Res, Authcode, SessionID, Np, Nc)}inv(pk(P))
+
+    # Step 10: B -> P: photos
+    # B replies on TLS channel. Signed by B so P can verify origin.
+    B *->* [P]: {f_photos(A, P, B, Res, PhotosA, SessionID, Authcode, Nc)}inv(pk(B))
+
+
+Goals:
+    PhotosA secret between B, P;
+    pwd(A, idp) guessable secret between A, idp;
+
+    B authenticates P on f_accessreq(A, P, B, Res, Nd)
+    P authenticates B on f_sessionid(A, P, B, Res, SessionID, Nd)
+    B authenticates P on f_sessionid(A, P, B, Res, SessionID, Nd)
+    idp authenticates A on f_pwd(A, P, B, Res, pwd(A, idp), Nb, SessionID, Ni)
+    B authenticates idp on f_consent(A, B, P, Res, Nb, SessionID)
+    P authenticates B on f_authcode(A, B, P, Res, Authcode, SessionID, Np)
+    B authenticates P on f_req(A, P, B, Res, Authcode, SessionID, Np, Nc)
+    P authenticates B on f_photos(A, P, B, Res, PhotosA, SessionID, Authcode, Nc)
