@@ -1,4 +1,4 @@
-Protocol: PhotoPrint_W5
+Protocol: PhotoPrint_w5
 
 Types:
     Agent A, P, B, idp;
