@@ -1,19 +1,28 @@
-Protocol: OpenAuth_W2
+Protocol: PhotoPrint_W2
 
 Types:
-    Agent A, B, P;
-    Number grant, photos;
+    Agent A, P, B;
+    Number Na, Np, PhotosA;
+    Function photos
 
 Knowledge:
-    A: A, B, P, pk(B), pk(P);
-    B: A, B, P, pk(B), inv(pk(B)), pk(P);
-    P: A, B, P, pk(P), inv(pk(P)), pk(B)
+    A: A, P, B, pk(A), inv(pk(A)), pk(P), pk(B);
+    P: A, P, B, pk(A), pk(P), inv(pk(P)), pk(B);
+    B: A, P, B, pk(A), pk(P), pk(B), inv(pk(B)), photos(A)
+
+where A!=P, B!=P
 
 Actions:
-    A -> P: {A, B, grant}pk(P)
-    P -> B: {A, P, grant}pk(B)
-    B -> P: {photos}pk(P)
+
+    P -> A: {A, P, B, Np}pk(A)
+    A -> P: {{A, P, B, Na, Np}inv(pk(A))}pk(P)
+    P -> B: {{A, P, B, Na, Np}inv(pk(A)), Np}pk(B)
+    B -> P: {photos(A), Na, Np}pk(P)
+
 
 Goals:
-    grant secret between A, P;
-    photos secret between B, P;
+    photos(A) secret between B, P;
+
+    P authenticates A on A, P, B, Na, Np
+    B authenticates A on A, P, B, Na, Np
+    P authenticates B on photos(A), Na, Np

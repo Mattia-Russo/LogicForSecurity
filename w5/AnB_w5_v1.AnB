@@ -26,9 +26,3 @@ Actions:
     B   *-> P:   {photos, f3(np)}(pk(P))
 
 Goals:
-    photos secret between A, B, P;
-    #grant secret between A, idp, P, B; #this is hard to achive: idp doesn't have a secure key to use to encrypt the response to A
-    #pwd secret between A, idp;
-
-    #A authenticates idp on f2(A, P, B, grant, na);
-    #B authenticates P on np

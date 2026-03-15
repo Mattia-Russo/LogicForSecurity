@@ -1,46 +1,50 @@
-Protocol: PhotoPrint_W4
+Protocol: PhotoPrint
 
 Types:
     Agent A, P, B, idp;
-    Number grant, na, np, nb, pwd, photos, selection, need_auth;
-    Function f1, f2, f3, f4
+    Number Res, Authcode, SessionID, Nb, Ni, Np, Nc, Nd, PhotosA;
+    Function pwd;
+    Format f_accessreq, f_sessionid, f_authreq, f_pwdreq, f_pwd, f_consent, f_authcode, f_req, f_photos;
 
 Knowledge:
-    A:   A, P, B, idp, pk(idp), pwd, pk(B), pk(P), na, photos, f1, f2, selection; # pk(B) amd pk(P) are known after A runs the keyLookUp protocol
-    idp: A, P, B, idp, pk(idp), inv(pk(idp)), pk(P), pk(B), pwd, grant, na, f1, f2, f4;
-    P:   A, P, B, idp, pk(idp), pk(P), inv(pk(P)), pk(B), np, f2, f3, f4, need_credentials;
-    B:   A, P, B, idp, pk(idp), pk(B), inv(pk(B)), pk(P), photos, nb, f2, f3, f4, need_auth
+    A:   A, P, B, idp, pk(idp), pk(B), pk(P), pwd(A, idp);
+    idp: A, P, B, idp, pk(idp), inv(pk(idp)), pk(P), pk(B), pwd(A, idp);
+    P:   A, P, B, idp, pk(idp), pk(P), inv(pk(P)), pk(B);
+    B:   A, P, B, idp, pk(idp), pk(B), inv(pk(B)), pk(P)
+
+where B!=P
 
 Actions:
+    P -> B: {{f_accessreq(A, P, B, Res, Nd)}inv(pk(P))}pk(B)
 
-    # First A runs the keyLookUp protocol to get pk(B) and pk(P) from idp
+    B -> P: {{f_sessionid(A, P, B, Res, SessionID, Nd)}inv(pk(B))}pk(P)
 
-    A   -> idp: {f1(A, P, B, pwd, na)}(pk(idp))
-    idp -> A:   {f1(A, P, B, grant, na)}(inv(pk(idp)))
-    A   -> P:   {f1(A, P, B, selection, na)}(pk(P))
-    P   -> B:   {f1(A, P, B, selection, na), f3(np)}(pk(B))
-    B   -> P:   {f4(A, P, B, need_auth), f3(nb)}(pk(P))
-    P   -> idp: {f4(A, P, B, need_credentials), f3(np)}(pk(idp))
-    idp -> P:   {{f4(A, P, B, grant), f3(np)}(inv(pk(idp)))}(pk(P))
-    P   -> B:   {{f4(A, P, B, grant), f3(np)}(inv(pk(idp))), f3(np)}(pk(B))
-    B   -> P:   {photos, f3(np)}(pk(P))
+    P -> B: {{f_sessionid(A, P, B, Res, SessionID, Nd)}inv(pk(P))}pk(B)
+
+    B -> idp: {{f_authreq(A, P, B, Res, Nb, SessionID)}inv(pk(B))}pk(idp)
+
+    idp -> A: {f_pwdreq(A, P, B, Res, Nb, SessionID, Ni)}inv(pk(idp))
+
+    A -> idp: {f_pwd(A, P, B, Res, pwd(A, idp), Nb, SessionID, Ni)}pk(idp)
+
+    idp -> B: {{f_consent(A, B, P, Res, Nb, SessionID)}inv(pk(idp))}pk(B)
+
+    B -> P: {{f_authcode(A, B, P, Res, Authcode, SessionID, Np)}inv(pk(B))}pk(P)
+
+    P -> B: {{f_req(A, P, B, Res, Authcode, SessionID, Np, Nc)}inv(pk(P))}pk(B)
+
+    B -> P: {{f_photos(A, P, B, Res, PhotosA, SessionID, Authcode, Nc)}inv(pk(B))}pk(P)
+
 
 Goals:
-    photos secret between A, B, P;
-    #grant secret between A, idp, P, B; #this is hard to achive: idp doesn't have a secure key to use to encrypt the response to A
-    pwd secret between A, idp;
-
-    #A authenticates idp on f2(A, P, B, grant, na);
-    #B authenticates P on np;
-
-
-# In this protocol every non-variable submessage in the set of standard message patterns (SMP) has a unique type determined by its 
-# top‑level constructor and the types of its arguments. Agents (A, P, B, idp), nonces (na, np), grant, passwords pwd, photos, 
-# and the tuples f1(..), f2(..) are all declared with distinct types, and the encryption constructors take a payload of a fixed type
-#  together with a key, yielding a ciphertext type that also depends on the payload type.
-# Now take any two non‑variable messages in SMP that unify. Unification requires that their outer constructor and arity coincide, 
-# and then that each pair of arguments in the same position can be unified. Because the typing ensures that different constructors 
-# (e.g. f1 vs f2, public‑key vs private‑key encryption, tuples vs atomic values) correspond to different types, any pair of 
-# messages with different types cannot even start to unify (their top‑level symbols or the types of arguments clash). 
-# Therefore, if two non‑variable SMP messages do have a unifier, they must share the same constructor with arguments of matching 
-# types in every position, i.e. they have the same type. Hence the protocol is type‑flaw resistant in the required sense.
+    PhotosA secret between B, P;
+    pwd(A, idp) secret between A, idp;
+    
+    B authenticates P on f_accessreq(A, P, B, Res, Nd)
+    P authenticates B on f_sessionid(A, P, B, Res, SessionID, Nd)
+    B authenticates P on f_sessionid(A, P, B, Res, SessionID, Nd)
+    idp authenticates A on f_pwd(A, P, B, Res, pwd(A, idp), Nb, SessionID, Ni)
+    B authenticates idp on f_consent(A, B, P, Res, Nb, SessionID)
+    P authenticates B on f_authcode(A, B, P, Res, Authcode, SessionID, Np)
+    B authenticates P on f_req(A, P, B, Res, Authcode, SessionID, Np, Nc)
+    P authenticates B on f_photos(A, P, B, Res, PhotosA, SessionID, Authcode, Nc)

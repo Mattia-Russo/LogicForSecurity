@@ -1,0 +1,19 @@
+Protocol: OpenAuth_W2
+
+Types:
+    Agent A, B, P;
+    Number grant, photos;
+
+Knowledge:
+    A: A, B, P, pk(B), pk(P);
+    B: A, B, P, pk(B), inv(pk(B)), pk(P);
+    P: A, B, P, pk(P), inv(pk(P)), pk(B)
+
+Actions:
+    A -> P: {A, B, grant}pk(P)
+    P -> B: {A, P, grant}pk(B)
+    B -> P: {photos}pk(P)
+
+Goals:
+    grant secret between A, P;
+    photos secret between B, P;

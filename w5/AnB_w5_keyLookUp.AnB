@@ -1,11 +1,5 @@
 Protocol: KeyLookUp_W5
 
-# Week 5 version of the key lookup sub-protocol.
-# A needs to obtain pk(P) and pk(B) from idp before running the main protocol.
-# Since idp is a TLS server, A can establish [A]*->*idp to protect the request.
-# The response still requires idp's signature so A can verify it is authentic
-# and so the key binding can be forwarded.
-
 Types:
     Agent A, P, B, idp;
     Number Na;

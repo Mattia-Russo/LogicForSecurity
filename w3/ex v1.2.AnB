@@ -1,26 +1,26 @@
 Protocol: PhotoPrint_W3
 
 Types:
-    Agent A, P, B, idp;
-    Number grant, na, np;
-    Function pwd, photos; # both functions because each agent could have its own password and photos (intruder included)
+    Agent A, P, B;
+    Number photos, Grant, Na;
+    Function pwd;
 
 Knowledge:
-    A:   A, P, B, idp, pk(idp), pwd(A), pk(B), pk(P), na, photos(A); # We assume A knows its own photos
-    idp: A, P, B, idp, pk(idp), inv(pk(idp)), pk(P), pk(B), pwd(A), grant;
-    P:   A, P, B, idp, pk(idp), pk(P), inv(pk(P)), pk(B), np;
-    B:   A, P, B, idp, pk(idp), pk(B), inv(pk(B)), pk(P), photos(A)
+    A:   A, P, B, idp, pk(idp), pwd(A), Na;
+    idp: A, P, B, idp, pk(idp), inv(pk(idp)), pk(P), pk(B), pwd(A), Grant;
+    P:   A, P, B, idp, pk(idp), pk(P), inv(pk(P)), pk(B);
+    B:   A, P, B, idp, pk(idp), pk(B), inv(pk(B)), pk(P), photos
 
 Actions:
-    A   -> idp: {A, P, B, pwd(A), na}(pk(idp))
-    idp -> A:   {A, P, B, grant, na}(inv(pk(idp)))
-    A   -> P:   {{A, P, B, grant, na}(inv(pk(idp)))}(pk(P))
-    P   -> B:   {{{A, P, B, grant, na}(inv(pk(idp))), np}(pk(B)), np}(inv(pk(P)))
-    B   -> P:   {photos(A), np}(pk(P))
+    A   -> idp: {A, P, B, pwd(A), Na}pk(idp)
+    idp -> A:   {A, P, B, Grant}inv(pk(idp))
+    A   -> P:   {A, P, B, Grant}inv(pk(idp))
+    P   -> B:   {A, P, B, Grant}inv(pk(idp))
+    B   -> P:   {photos}pk(P)
 
 Goals:
-    photos(A) secret between A, B, P;
-    #grant secret between A, idp, P, B; #this is hard to achive: idp doesn't have a secure key to use to encrypt the response to A
+    photos secret between B, P;
+    Grant secret between A, idp, P, B;
 
 
 
@@ -53,7 +53,7 @@ Goals:
 #   Incoming message: apply OpenSig rule since we have the signed message.
 #   M1 ⊢ {a, i, b, token}(inv(pk(idp)))   by Axiom
 #   Apply OpenSig: M1 ⊢ inv(pk(idp))?  No, intruder does not have inv(pk(idp)).
-#   => Cannot open signature, but i does NOT need to open it.
+#   => Cannot open sigNature, but i does NOT need to open it.
 #      i only needs to FORWARD it to b.
 
 # Step 2: P's first outgoing message to b:
