@@ -1,6 +1,6 @@
 # LogicForSecurity
 
-This repository contains a set of protocol models and security analyses developed for a course or project on logic and security. The project focuses on formal modeling of authentication and secrecy properties using the AnB language and the OFMC model checker.
+This repository contains a set of protocol models and security analyses developed for a course on logic and security. The project focuses on formal modeling of authentication and secrecy properties using the AnB language and the OFMC model checker.
 
 ## Overview
 
@@ -68,9 +68,4 @@ This project is centered around formal methods for security protocol analysis, p
 ## Notes
 
 - The repository is strongly focused on protocol design and verification rather than implementation in a traditional programming language.
-- It appears to be coursework or study material for logic-based security analysis.
 - Several folders contain variants that were intentionally tested, excluded, or refined over multiple weeks.
-
-## License
-
-No explicit license file was found in the repository metadata. If you plan to distribute or publish this project, consider adding an appropriate open-source license such as MIT or GPL.
